@@ -1,0 +1,4 @@
+<div
+  dangerouslySetInnerHTML={{
+    __html: blog.excerpt
+  }}></div>
