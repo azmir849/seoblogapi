@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
             type: String,
             trim: true,
             required: true,
-            max: 12,
+            max: 32,
             unique: true,
             index: true,
             lowercase: true
@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema(
             default: ''
         }
     },
-    { timestamps: true }
+    { timestamp: true }
 );
 
 userSchema

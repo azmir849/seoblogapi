@@ -3,7 +3,6 @@ const Blog = require('../models/blog');
 const _ = require('lodash');
 const formidable = require('formidable');
 const fs = require('fs');
-const slugify = require('slugify');
 const { errorHandler } = require('../helpers/dbErrorHandler');
 
 exports.read = (req, res) => {
@@ -27,7 +26,7 @@ exports.publicProfile = (req, res) => {
         Blog.find({ postedBy: userId })
             .populate('categories', '_id name slug')
             .populate('tags', '_id name slug')
-            .populate('postedBy', '_id name username createdAt updatedAt')
+            .populate('postedBy', '_id name')
             .limit(10)
             .select('_id title slug excerpt categories tags postedBy createdAt updatedAt')
             .exec((err, data) => {
@@ -37,7 +36,6 @@ exports.publicProfile = (req, res) => {
                     });
                 }
                 user.photo = undefined;
-                user.salt = undefined;
                 user.hashed_password = undefined;
                 res.json({
                     user,
@@ -56,27 +54,14 @@ exports.update = (req, res) => {
                 error: 'Photo could not be uploaded'
             });
         }
-
         let user = req.profile;
-
-        if (fields && fields.username && fields.username.length > 12) {
-            return res.status(400).json({
-                error: 'Username should be less than 12 characters long'
-            });
-        }
-
-        if (fields.username) {
-            fields.username = slugify(fields.username).toLowerCase();
-        }
+        user = _.extend(user, fields);
 
         if (fields.password && fields.password.length < 6) {
             return res.status(400).json({
                 error: 'Password should be min 6 characters long'
             });
         }
-
-        user = _.extend(user, fields);
-        user.role = 0;
 
         if (files.photo) {
             if (files.photo.size > 10000000) {
@@ -90,9 +75,8 @@ exports.update = (req, res) => {
 
         user.save((err, result) => {
             if (err) {
-                console.log('profile udpate error', err);
                 return res.status(400).json({
-                    error: errorHandler(err)
+                    error: 'All filds required'
                 });
             }
             user.hashed_password = undefined;
